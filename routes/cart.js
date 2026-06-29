@@ -19,13 +19,23 @@ function saveCart(res, cart) {
 
 router.post("/add/:id", (req, res) => {
   const id = parseInt(req.params.id);
-  const quantity = Math.max(1, parseInt(req.body.quantity || "1"));
+  const requestedQuantity = Math.max(1, parseInt(req.body.quantity || "1"));
   const products = req.app.locals.products;
   const product = products.find((p) => p.id === id);
   if (!product) return res.status(404).json({ error: "Produkt nicht gefunden" });
+  if (!product.orderInfo.available || product.orderInfo.stock <= 0) {
+    return res.status(400).json({ error: "Produkt nicht verfügbar" });
+  }
 
   const cart = getCart(req);
   const existing = cart.find((item) => item.productId === id);
+  const existingQuantity = existing ? existing.quantity : 0;
+  const quantity = Math.min(requestedQuantity, product.orderInfo.stock - existingQuantity);
+  if (quantity <= 0) {
+    const total = cart.reduce((sum, item) => sum + item.quantity, 0);
+    return res.json({ cartCount: total, maxReached: true });
+  }
+
   if (existing) {
     existing.quantity += quantity;
   } else {
@@ -48,6 +58,28 @@ router.post("/remove/:id", (req, res) => {
     return res.redirect("/warenkorb");
   }
   res.json({ cartCount: total });
+});
+
+router.post("/update/:id", (req, res) => {
+  const id = parseInt(req.params.id);
+  const products = req.app.locals.products;
+  const product = products.find((p) => p.id === id);
+  if (!product || !product.orderInfo.available || product.orderInfo.stock <= 0) {
+    return res.redirect("/warenkorb");
+  }
+
+  const requestedQuantity = parseInt(req.body.quantity || "1", 10);
+  const safeQuantity = Number.isFinite(requestedQuantity) ? requestedQuantity : 1;
+  const quantity = Math.max(1, Math.min(safeQuantity, product.orderInfo.stock));
+  const cart = getCart(req);
+  const existing = cart.find((item) => item.productId === id);
+
+  if (existing) {
+    existing.quantity = quantity;
+    saveCart(res, cart);
+  }
+
+  res.redirect("/warenkorb");
 });
 
 router.post("/clear", (req, res) => {
