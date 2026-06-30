@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= title %> | CoffeeArt Bremen</title>
+  <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css">
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -15,7 +16,7 @@
         <li><a href="/shop">Shop</a></li>
         <li><a href="/coffee-finder">Coffee Finder</a></li>
         <li><a href="/blog">Blog</a></li>
-        <li><a href="/warenkorb">Warenkorb <% if (typeof cartCount !== 'undefined' && cartCount > 0) { %>(<%= cartCount %>)<% } %></a></li>
+        <li><a href="/warenkorb"><span>Warenkorb</span> <% if (typeof cartCount !== 'undefined' && cartCount > 0) { %><span class="cart-count"><%= cartCount %></span><% } %></a></li>
         <% if (typeof user !== 'undefined' && user) { %>
           <li><a href="/admin">Admin</a></li>
           <li><a href="/logout" class="nav-login">Logout</a></li>
